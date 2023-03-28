@@ -4,16 +4,34 @@ import "cesium/Build/Cesium/Widgets/widgets.css";
 // import "@babylonjs/inspector";
 import { Engine, Scene, Vector3, MeshBuilder, Color4, FreeCamera, TransformNode, StandardMaterial, Color3, Matrix } from "@babylonjs/core";
 
-export const initCanvas = (canvas) => {
+export const initCanvas = (canvas: HTMLCanvasElement) => {
     const _this: Record<string, any> = {};
 
     const LNG = -122.4175, LAT = 37.655;
     
     function initCesium() {
         const viewer = new Cesium.Viewer('cesiumContainer', {
-            terrainProvider: Cesium.createWorldTerrain(),
+            // terrainProvider: Cesium.createWorldTerrain(),
             useDefaultRenderLoop: false
         });
+
+        //默认的Cesium会加载一个bingMap底图，网络不太好，一般要先去掉这个默认的
+        viewer.imageryLayers.remove(viewer.imageryLayers.get(0));
+        // 隐藏cesium ion
+        (viewer as any)._cesiumWidget._creditContainer.style.display = 'none';
+        //地形遮挡效果开关，打开后地形会遮挡看不到的区域
+        viewer.scene.globe.depthTestAgainstTerrain = true;
+        // 显示底图
+        viewer.scene.globe.show = true;
+        //关闭天空盒，否则会显示天空颜色
+        viewer.scene.skyBox.show = false;
+        //背景透明
+        viewer.scene.backgroundColor = new Cesium.Color(0.0, 0.0, 0.0, 0.0);
+        //关闭大气
+        viewer.scene.skyAtmosphere.show = false;
+        //抗锯齿
+        (viewer.scene as any).fxaa = true;
+        viewer.scene.postProcessStages.fxaa.enabled = true;
     
         viewer.camera.flyTo({
             destination : Cesium.Cartesian3.fromDegrees(LNG, LAT, 300),
@@ -26,6 +44,13 @@ export const initCanvas = (canvas) => {
         _this.viewer = viewer;
         _this.base_point = cart2vec(Cesium.Cartesian3.fromDegrees(LNG, LAT, 50));
         _this.base_point_up = cart2vec(Cesium.Cartesian3.fromDegrees(LNG, LAT, 300));
+
+        const layer = new Cesium.UrlTemplateImageryProvider({
+            url: "http://webrd02.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}",
+            minimumLevel: 4,
+            maximumLevel: 18
+        })
+        viewer.imageryLayers.addImageryProvider(layer);
     }
     
     function initBabylon() {
@@ -72,7 +97,7 @@ export const initCanvas = (canvas) => {
     
         const scaling = Vector3.Zero(), rotation = Vector3.Zero(), transform = Vector3.Zero();
         camera_matrix.decompose(scaling, rotation as any, transform);
-        const camera_pos = cart2vec(transform),
+        const camera_pos = cart2vec(transform as any),
             camera_direction = cart2vec(_this.viewer.camera.direction),
             camera_up = cart2vec(_this.viewer.camera.up);
     
@@ -93,7 +118,7 @@ export const initCanvas = (canvas) => {
         _this.camera.rotation.z = rotation_z;
     }
     
-    function cart2vec(cart) {
+    function cart2vec(cart: Cesium.Cartesian3) {
         return new Vector3(cart.x, cart.z, cart.y);
     }
     
