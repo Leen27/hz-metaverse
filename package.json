@@ -18,9 +18,16 @@
     "cesium": "^1.103.0",
     "pinia": "^2.0.32",
     "vue": "^3.2.47",
-    "vue-router": "^4.1.6"
+    "vue-router": "^4.1.6",
+    "@babylonjs/core": "^5.52.0"
   },
   "devDependencies": {
+    "@babylonjs/gui": "^5.52.0",
+    "@babylonjs/gui-editor": "^5.52.0",
+    "@babylonjs/inspector": "^5.52.0",
+    "@babylonjs/loaders": "^5.52.0",
+    "@babylonjs/materials": "^5.52.0",
+    "@babylonjs/serializers": "^5.52.0",
     "@rushstack/eslint-patch": "^1.2.0",
     "@types/jsdom": "^21.1.0",
     "@types/node": "^18.14.2",
