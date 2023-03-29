@@ -2,16 +2,44 @@ import * as Cesium from 'cesium';
 import "cesium/Build/Cesium/Widgets/widgets.css";
 // import "@babylonjs/core/Debug/debugLayer";
 // import "@babylonjs/inspector";
-import { Engine, Scene, Vector3, MeshBuilder, Color4, FreeCamera, TransformNode, StandardMaterial, Color3, Matrix } from "@babylonjs/core";
+import "@babylonjs/loaders/glTF";
+import { Engine, Scene, Vector3, HemisphericLight, MeshBuilder, Color4, FreeCamera, TransformNode, StandardMaterial, Color3, Matrix, SceneLoader } from "@babylonjs/core";
 
-export const initCanvas = (canvas: HTMLCanvasElement) => {
+export type TRenderEngine = {
+    viewer: Cesium.Viewer | null;
+    engine: Engine | null;
+    [k: string]: any;
+}
+
+export const initCanvas = (canvas: HTMLCanvasElement): TRenderEngine => {
     const _this: Record<string, any> = {};
 
-    const LNG = -122.4175, LAT = 37.655;
+    const LNG = 120.24318610821572, LAT = 29.7218163632983;
     
     function initCesium() {
-        const viewer = new Cesium.Viewer('cesiumContainer', {
-            // terrainProvider: Cesium.createWorldTerrain(),
+        // const viewer = new Cesium.Viewer('cesiumContainer', {
+        //     // terrainProvider: Cesium.createWorldTerrain(),
+        //     useDefaultRenderLoop: false
+        // });
+
+
+        const viewer: any = new Cesium.Viewer('cesiumContainer', {
+            baseLayerPicker: true, // 如果设置为false，将不会创建右上角图层按钮。
+            geocoder: true, // 如果设置为false，将不会创建右上角查询(放大镜)按钮。
+            navigationHelpButton: false, // 如果设置为false，则不会创建右上角帮助(问号)按钮。
+            homeButton: false, // 如果设置为false，将不会创建右上角主页(房子)按钮。
+            sceneModePicker: false, // 如果设置为false，将不会创建右上角投影方式控件(显示二三维切换按钮)。
+            animation: false, // 如果设置为false，将不会创建左下角动画小部件。
+            timeline: false, // 如果设置为false，则不会创建正下方时间轴小部件。
+            fullscreenButton: false, // 如果设置为false，将不会创建右下角全屏按钮。
+            scene3DOnly: true, // 为 true 时，每个几何实例将仅以3D渲染以节省GPU内存。
+            shouldAnimate: false, // 默认true ，否则为 false 。此选项优先于设置 Viewer＃clockViewModel 。
+            // ps. Viewer＃clockViewModel 是用于控制当前时间的时钟视图模型。我们这里用不到时钟，就把shouldAnimate设为false
+            infoBox: false, // 是否显示点击要素之后显示的信息
+            sceneMode: 3, // 初始场景模式 1 2D模式 2 2D循环模式 3 3D模式  Cesium.SceneMode
+            requestRenderMode: false, // 启用请求渲染模式，不需要渲染，节约资源吧
+            fullscreenElement: document.body, // 全屏时渲染的HTML元素 暂时没发现用处，虽然我关闭了全屏按钮，但是键盘按F11 浏览器也还是会进入全屏
+            // imageryProvider: creaetNonMapProvider(),
             useDefaultRenderLoop: false
         });
 
@@ -63,7 +91,7 @@ export const initCanvas = (canvas: HTMLCanvasElement) => {
         _this.root_node = new TransformNode("BaseNode", scene);
         _this.root_node.lookAt(_this.base_point_up.subtract(_this.base_point));
         _this.root_node.addRotation(Math.PI / 2, 0, 0);
-    
+
         const box = MeshBuilder.CreateBox("box", {size: 10}, scene);
         const material = new StandardMaterial("Material", scene);
         material.emissiveColor = new Color3(1, 0, 0);
@@ -77,13 +105,23 @@ export const initCanvas = (canvas: HTMLCanvasElement) => {
         }, scene);
         ground.material = material;
         ground.parent = _this.root_node;
-    
+
         _this.engine = engine;
         _this.scene = scene;
         _this.camera = camera;
+
+        _this.scene.autoClear = false;
+        _this.scene.detachControl();
+        _this.scene.beforeRender = function(){
+        _this.engine.wipeCaches(true);
+        }
+        const light = new HemisphericLight("light", new Vector3(1, 1, 0));
+
     }
     
     function moveBabylonCamera() {
+        if (!_this.viewer) return;
+
         const fov = Cesium.Math.toDegrees(_this.viewer.camera.frustum.fovy)
         _this.camera.fov = fov / 180 * Math.PI;
     
@@ -129,4 +167,6 @@ export const initCanvas = (canvas: HTMLCanvasElement) => {
         moveBabylonCamera();
         _this.scene.render();
     });
+
+    return _this as TRenderEngine;
 }
