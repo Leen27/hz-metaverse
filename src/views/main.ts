@@ -82,7 +82,9 @@ export const initCanvas = (canvas: HTMLCanvasElement): TRenderEngine => {
     }
     
     function initBabylon() {
-        const engine = new Engine(canvas);
+        const engine = new Engine(canvas, true, {
+            useHighPrecisionMatrix: true, useHighPrecisionFloats: true
+        });
         const scene = new Scene(engine);
         scene.clearColor = new Color4(0, 0, 0, 0);
     
